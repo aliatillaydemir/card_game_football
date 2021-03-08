@@ -1,0 +1,641 @@
+//180202083 Mehmet Alperen Onarır
+//180202063 Ali Atilla Aydemir
+
+
+#include <stdio.h>
+#include <conio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <graphics.h>  //grafik kutuphanesi
+
+
+struct noktalar{
+	
+	int x;
+	int y;
+	
+}nokta[30];
+
+
+char bilgix[3]; //2 noktada çevreleyen cemberin bilgilerini ekranda basabilmek icin tuttugumuz global dizi. 
+
+int sayac=0,stok_no=0; //sayac toplam noktayi bulurken, stok_no yaricap islemi uzerinde kullaniliyor.
+
+int cember_bulundu; 
+int uclu_kombinasyon_sayisi;
+float uclu_kapsayan_stok[150][3];  //3 ve uzeri noktaya ihtiyacimiz oldugunda bunu kullaniriz. bircok kapsama alani olacak ama en kucugunu tutacagimiz icin 150 kapasiteli buyuk bir alan tahsil ettik.
+
+
+
+int nokta_okuma(){    //dosyayi okuma fonksiyonu
+
+
+FILE * dosya;
+int i=0;
+
+if(dosya = fopen("noktalar.txt","r")){
+
+
+printf(" nokta dosyasi basaryla acildi\n\n");
+printf("   X   VE   Y   KORDINATLARINDA \n");
+
+while(!feof(dosya)){
+      
+	  fscanf(dosya,"%d",&nokta[i].x); ++sayac;
+      fscanf(dosya,"%d",&nokta[i].y); ++sayac;
+
+
+printf("   X%d=%d   Y%d=%d \n",(i+1),nokta[i].x,(i+1),nokta[i].y);
+i++;
+
+}
+
+return sayac; // return ile sonuc donduk cünkü sadece cagirmayacagiz, aynı zamanda fonksiyonlarda ve mainde nokta adedine de ihtiyacimiz olacak.
+}else{
+
+printf("hata! nokta dosya acilamadi!");
+
+}
+fclose(dosya);
+
+}
+
+
+
+void kapsama_kontrol(float R1, float merkezkord1[2]){  //cap ve merkeze dair x ve y olmak uzere iki koordinat bilgisi girilir.
+
+
+float merkez_x = merkezkord1[0];
+float merkez_y = merkezkord1[1];
+
+float r = R1/2.0+0.000005; // cift noktayı hassaslastırıyoruz ki görebilsin
+cember_bulundu=1; // bayragı kuruyoruz, kapsama dısında nokta bulunmaz ise 1 kalacak
+
+
+
+for(int i=0; i<sayac/2 ; i++){
+
+    if( r < sqrt((pow((merkez_x - nokta[i].x),2) + pow((merkez_y - nokta[i].y),2)))) {   //halihazirdaki yaricap daha kisaysa
+
+    cember_bulundu=0;  //cember falan yok
+
+}
+ else continue;
+
+}
+
+if(cember_bulundu==1){  //yaricap daha kisa ise cember_bunlundu 1 donecek.
+	
+	printf("\n\n*******************************************\n");
+    printf("\n \nMinimum Cember Bilgileri  \n Merkez Kordinatlari(CAP)"
+           "  X = %.1f y = %.1f\n Yaricapi = %.4f\n",merkez_x,merkez_y,r);
+           printf("\n\n*******************************************\n");
+        
+		setcolor(BLUE);   
+           circle(merkez_x*15 + 400 ,(merkez_y * -15) +400, r*15);
+    
+ //merkez x,y ve r icerir.
+       //bilgix global degiskendir en yuakrida tanımladik.
+sprintf(bilgix, "M(%.1f , %.1f) - r = %.4f",merkez_x,merkez_y,r);  //degerlerimizi outtexty'de yazdırmak icin once sprintf ile diziye atariz. sonra diziyi girdigimizde sonuc ne ise ekrana o basilir
+
+
+setcolor(GREEN);
+settextstyle(3,0,2);  
+line(merkez_x*15 + 400,(merkez_y * -15) +400,merkez_x*15 + 400+r*15,(merkez_y * -15) +400);                      //yaricap ve merkez bilgileri cember uzerinde gosteriliyor
+outtextxy(merkez_x*15 + 400+r*15+5, (merkez_y * -15) +400-10, bilgix);
+        
+          
+}
+
+
+}
+
+
+
+void ikili_en_buyuk_cap(int x_kord[30], int y_kord[30]){
+	
+	
+int x1_temp=0,x2_temp=0,y1_temp=0,y2_temp=0;
+int x1,y1,x2,y2;
+float merkez_kord[2];
+float R,temp_R=0;
+
+
+for(int i=0 ; i < (sayac/2)-1 ; i++){
+for(int k=i+1; k< (sayac/2) ; k++){
+
+  x1=x_kord[i];
+  y1=y_kord[i];
+  x2=x_kord[k];
+  y2=y_kord[k];
+  R= sqrt((pow((x1-x2),2)) + pow((y1-y2),2));
+ if(R>=temp_R){temp_R=R;x1_temp=x1;x2_temp=x2;y1_temp=y1;y2_temp=y2;} else continue;
+   // capı en büyük ikili nokta secenegi bulunuyor, esit olması durumunda aynı
+   // cembere ait olmak zorunda oldugu ıcın kıyas yapılmıyor
+
+}
+}
+
+temp_R= sqrt((((x1_temp-x2_temp)*(x1_temp-x2_temp)) + ((y1_temp-y2_temp)*(y1_temp-y2_temp))));
+ 
+  merkez_kord[0]= (x1_temp+x2_temp)/2.0;
+  merkez_kord[1]= (y1_temp+y2_temp)/2.0;
+
+  kapsama_kontrol(temp_R,merkez_kord); //kapsıyor mu diye kontrol etmek icin diger fonksiyona atıyor degerleri.
+
+
+// nokta degerlerinin alınması ıcın dongu
+// noktalar arasındaki tum kombinasyonlar
+// tum kombinasyonların aralarındakı uzaklık hesabı ile cap bulma
+
+// kapsama_kontrol fonk cagırılması
+// kapsamadan olumlu donen noktalar ıcın cember cevresi hesaplama
+// en kucuk cemberın geri dönmesi
+
+
+}
+
+
+
+
+void kordinat_sistemi_noktalar(){   //koordinat sistemine dair ayarlamalar buradan yapılır. islemlerin yapildigi yaricap ve merkezin gosterildigi kisimlar main'dedir 
+	
+	
+int gd = DETECT, gm, color; 
+initgraph(&gd, &gm, "");      //grafik motor cagırılıyor denilebilir.
+
+
+line(100,400,700,400); //x koordinatı
+line(400,100,400,700); // y koordinatı
+circle(400,400,5); //orijin noktası
+outtextxy(410,380,"O(0,0)"); //orijini gosteren o noktası ekrana basildi. bunu aynı zamanda çembere değdme noktasinda kullanabliriz.
+
+
+int noktx,nokty; //structtan cektigimiz noktaların x ve ysi olacak.
+
+
+for(int t=0;t<sayac/2;t++) //  noktalarin yerlernini ayarlamak icin piksel hesabi yapıyoruz. piksel olarak konumu ile koordinat uzeridneki sayisal konum arasında esitlik yok.  
+                        // bunu kuracak matematiksel hesaplamayi olusturuyoruz. !!! sayac/2=nokta idi en yuakrıda tutmustuk global degisken olarak
+{
+noktx=400+15*nokta[t].x;
+nokty=400+(-15)*nokta[t].y;
+
+     
+setcolor(WHITE);
+circle(noktx,nokty,3);
+setfillstyle(SOLID_FILL, WHITE);    //renklendirmeler yapildi.
+floodfill(noktx,nokty,WHITE);
+		
+
+}
+
+
+
+//x koordinat duzlemini ayiriyoruz.
+for(int i=0;i<=600;i+=15)     //-20'den +20'ye kadar x koordinatini küçük y'ler cizerek boleriz.
+{	
+
+	line(100+i,395,100+i,405);
+ 
+}
+
+	settextstyle(2,0,4);                                                                                                                                                                                      
+	setcolor(YELLOW);                                                               
+	outtextxy(90+02,410,"-20");               outtextxy(413,410,"1");                                         
+	outtextxy(90+17,410,"-19");               outtextxy(428,410,"2");                                                                                                                                                       
+	outtextxy(90+32,410,"-18");			      outtextxy(443,410,"3");
+	outtextxy(90+47,410,"-17");				  outtextxy(458,410,"4");																																		
+	outtextxy(90+62,410,"-16");				  outtextxy(473,410,"5");																					
+	outtextxy(90+77,410,"-15");				  outtextxy(488,410,"6");																				
+	outtextxy(90+92,410,"-14");				  outtextxy(503,410,"7");																								
+	outtextxy(90+107,410,"-13");			  outtextxy(518,410,"8");																							
+	outtextxy(90+122,410,"-12");			  outtextxy(533,410,"9");							//x ekseninin noktalari																				
+	outtextxy(90+137,410,"-11");			  outtextxy(548,410,"10");																										
+	outtextxy(90+153,410,"-10");		   	  outtextxy(563,410,"11");																											
+	outtextxy(90+169,410,"-9");				  outtextxy(578,410,"12");																										
+	outtextxy(90+184,410,"-8");				  outtextxy(593,410,"13");																											
+	outtextxy(90+199,410,"-7");				  outtextxy(608,410,"14");																																	
+	outtextxy(90+214,410,"-6");				  outtextxy(623,410,"15");																																
+	outtextxy(90+229,410,"-5");				  outtextxy(638,410,"16");																																		
+	outtextxy(90+244,410,"-4");			      outtextxy(653,410,"17");																								
+	outtextxy(90+259,410,"-3");				  outtextxy(668,410,"18");																												
+	outtextxy(90+274,410,"-2");				  outtextxy(683,410,"19");																								
+	outtextxy(90+289,410,"-1");				  outtextxy(698,410,"20");																						
+	//outtextxy(90+303,410,"-0");
+                                                           
+                                              	                                                                                                                            
+	outtextxy(387,400-19,"1");				//outtextxy(390,400-19,"-1");																																								
+	outtextxy(387,400-34,"2");				outtextxy(410,400+25,"-2");																												
+	outtextxy(387,400-49,"3");				outtextxy(410,400+40,"-3");																																					
+	outtextxy(387,400-64,"4");				outtextxy(410,400+55,"-4");																																			
+	outtextxy(387,400-79,"5");				outtextxy(410,400+70,"-5");																																	
+	outtextxy(387,400-94,"6");				outtextxy(410,400+85,"-6");																													
+	outtextxy(387,400-109,"7");				outtextxy(410,400+100,"-7");																															
+	outtextxy(387,400-124,"8");				outtextxy(410,400+115,"-8");																											
+	outtextxy(387,400-139,"9");				outtextxy(410,400+130,"-9");																												
+	outtextxy(387,400-154,"10");			outtextxy(410,400+145,"-10");					 //y ekseni noktalari																	
+	outtextxy(387,400-169,"11");			outtextxy(410,400+160,"-11");																									
+	outtextxy(387,400-184,"12");			outtextxy(410,400+175,"-12");																								
+	outtextxy(387,400-199,"13");			outtextxy(410,400+190,"-13");																								
+	outtextxy(387,400-214,"14");			outtextxy(410,400+205,"-14");																				
+	outtextxy(387,400-229,"15");			outtextxy(410,400+220,"-15");																														
+	outtextxy(387,400-244,"16");			outtextxy(410,400+235,"-16");																																				
+	outtextxy(387,400-259,"17");			outtextxy(410,400+250,"-17");																																
+	outtextxy(387,400-274,"18");			outtextxy(410,400+265,"-18");																																							
+	outtextxy(387,400-289,"19");			outtextxy(410,400+280,"-19");																														
+	outtextxy(387,400-304,"20");			outtextxy(410,400+295,"-20");																																	
+	
+
+	setcolor(WHITE);   //diger sekillerin renkleri ve gorunusleri bozulmasin diye tekrar whıte yapiyoruz.
+
+
+//y koordinat duzlemini ayiriyoruz.
+for(int j=0;j<=600;j+=15)     //-20'den +20'ye kadar y koordinatini kucuk x'ler cizerek boleriz. 
+{
+	line(395,100+j,405,100+j);
+
+}
+
+//if(cember_bulundu==1)
+//2 noktada kapsayan orada bittiği için başta çizdiğimiz koordinat sistemine de main'e de b spline islemi yaptiriyoruz ki,
+//hem 3 noktada hem de 2 noktada kapsayan dairede bpline cizdirebilelim. 
+// ******************************************************************  b spline islemi  *************************************************************************************************
+
+
+
+	int n = sayac/2-1; //nokta adeti.
+
+	int dizix[30];
+	int diziy[30];
+
+
+for(int a=0;a<=n;a++)
+	{
+	dizix[a]=nokta[a].x;
+	diziy[a]=nokta[a].y;	
+	}
+	
+	
+	
+	int i;
+	int tutx,tuty;
+	
+    for(int temp=1; temp<=n; temp++)
+       {
+           for (i=0;i<n ;i++)
+          {
+           if (dizix[i]>dizix[i+1])
+           {
+               tutx=dizix[i];
+               tuty=diziy[i];
+               dizix[i]=dizix[i+1];
+               diziy[i]=diziy[i+1];
+               dizix[i+1]=tutx;
+               diziy[i+1]=tuty;
+           }
+          }
+       }
+
+	for(int q=0;q<=n;q++)
+printf("%d  -- %d \n",dizix[q],diziy[q]);
+
+
+float ortx[20];
+float orty[20];
+
+//her bir noktanin orta noktasini bul.
+for(int q=0;q<n;q++)
+{
+	ortx[q]=(dizix[q]+dizix[q+1])/2;
+	orty[q]=(diziy[q]+diziy[q+1])/2;
+	
+}
+
+
+float t;
+float xt,yt;
+int k=1;
+
+for(int i=0; i<n;i++)
+{
+
+for(t=0.0; t<=1.0; t+=0.001)
+{
+	xt = pow(1-t,3)*dizix[i] + 3*t*pow(1-t,2)*ortx[i]*1.2 + 3*t*t*(1-t)*ortx[i]*0.8 + pow(t,3)*dizix[k];   //BSPLİNE GENEL FORMULU
+	yt = pow(1-t,3)*diziy[i] + 3*t*pow(1-t,2)*orty[i]*1.2 + 3*t*t*(1-t)*orty[i]*0.8 + pow(t,3)*diziy[k];  //1.2 hassasiyet kazandirir.(kontrol noktamiz biraz daha geriye çeklmiş olur ve eğrinin pozisyounu genişletir.)
+	
+	putpixel(xt*15+400,-15*yt+400,4);
+}
+k++;
+}
+
+
+
+// ******************************************************************  b spline islemi  *************************************************************************************************
+
+}
+
+
+
+
+void uc_noktada_cember_denk(int x1, int x2, int x3,int y1, int y2, int y3){   //3 ve uzeri noktada cember kurulmasinda kullaniliyor.
+
+
+double a,b,c,d,e,f,g,h;
+double R1,merkezkord1[2];
+double D,D2,E,E_kontrol,F,F2,F3,delta;
+
+
+
+int flag = 0;
+a= ( pow(x3,2) + pow(y3,2)) ;
+b= ( pow(x1,2) + pow(y1,2)) ;
+c= y1-y3;
+d= x3-x1;
+e= (pow(x1,2) - pow(x2,2)) ;
+f= (pow(y1,2) - pow(y2,2)) ;
+g= y1- y2;
+h= x2 - x1;
+
+/*
+if(((h*c) - (d*g)) == 0){
+
+// E DEGERİ 0 CIKARSA BOLUM ISLEMİNDE KULLANAMAYACAGIMIZ ICIN ALTERNATİF BİR E FORMULU DEVREYE GİRİYOR
+//E = 
+
+}
+
+else { E= ((h*a) - (h*b) - (d*e) + (d*f)) / ( (h*c) - (d*g) ); }
+
+
+if (d==0){
+
+// d DEGERİ 0 CIKARSA BOLUM ISLEMİNDE KULLANAMAYACAGIMIZ ICIN D Yİ ELDE EDEMEYİZ. ALTERNATİF BİR D FORMULU DEVREYE GİRİYOR
+//D=
+
+
+else {  D=  ((E*c) - (a - b ))/d; }
+*/
+E= ((h*a) - (h*b) + (d*e) + (d*f)) / ( (h*c) - (d*g) ); 
+D=  ((E*c) - (a - b ))/d;
+D2= (e + f + (E*g))/h; // alternatif D degeri
+
+F= -( b + (D*x1)+ (E*y1) ) ;
+F2= -( a + D*x3 + E*y3 );  // alternatif F degeri
+
+
+delta= pow(D,2) + pow(E,2) - (4*F);
+
+if(delta <= 0 || ((h*a) - (h*b) + (d*e) + (d*f)) / ( (h*c) - (d*g) ) == 0 ){}
+ else {
+
+
+R1= 0.00005+sqrt((pow(D,2) + pow(E,2) - (4*F2))); // HASSASİYET AYARI 
+merkezkord1[0] = -(D/2);
+merkezkord1[1] = -(E/2);
+F3= pow(merkezkord1[0],2) + pow(merkezkord1[1],2) - pow(R1/2,2) ; // alternatif F degeri
+for(int i=0; i<sayac/2 ; i++){
+
+    if( R1/2 < sqrt(pow((merkezkord1[0] - nokta[i].x),2) + pow((merkezkord1[1] - nokta[i].y),2))) {
+
+        flag++;      //yaricaptan daha buyuk ise flag++, bize yaricapi daha kucuk bilgiler gerekiyor. 
+
+    }
+    else continue;
+}
+
+  if(flag==0){   //bayrak kurulmadiysa daha kucuk daire bulunmus demektir. at stok_no ile. surekli islemler yapilacak en son ki bizim en kucuk daire bilgilerimizi verecek.
+  
+uclu_kapsayan_stok[stok_no][0] = R1/2;
+uclu_kapsayan_stok[stok_no][1] = merkezkord1[0];
+uclu_kapsayan_stok[stok_no][2] = merkezkord1[1];
+
+stok_no++;}                                                                    // uclu_kapsama_kontrol(R1,merkezkord1)
+}
+
+
+
+
+}
+
+
+
+
+void uclu_kombinasyon_olusturma(){   //uclu kombinasyonlar uretilip cember denkelmi donksiyonuna gonderilir ve islemlerden gecerek daha kucuk capli cemberimiz bulunur.
+
+
+
+int x1,y1,x2,y2,x3,y3;
+
+
+for(int i=0 ; i< (sayac/2) ; i++){
+    for(int j=0; j < (sayac/2) ; j++){
+        for(int k=0; k < (sayac/2) ; k++){
+
+            y1=nokta[i].y;
+            y2=nokta[j].y;
+            y3=nokta[k].y;
+            x1=nokta[i].x;
+            x2=nokta[j].x;
+            x3=nokta[k].x;
+
+
+            if((x1==x2 && y1==y2 ) || (x1==x3 && y1==y3) || (x2==x3 && y2==y3)){continue;}
+            else {uc_noktada_cember_denk(x1,x2,x3,y1,y2,y3);
+
+
+            }
+        }
+    }
+}
+}
+
+
+
+
+void uclu_kombinasyon_sayisi_bulma(){     //noktalarin uclu noktalarinin kombinasyon sayisi bulunur. kombine edilmesi icin. uclu_kombinasyon_olusturma'ya gonderilir.
+										//	bircok nokta var. uclu cember icin herbirinin birbirleriyle olan kombinasyonuna ihtiyacimiz var ki daha kucuk cemberi bulabilelim.
+
+int fact_nokta_sayisi=1;
+int n_eksi_3_fact=1;
+
+
+ // nokta sayısı nın 3 lu kombinasyonu kadar cember cizilecek
+ // n nin 3 lü kombinasyon formulü C(n,3) = n!/(6*((n-3)!))
+
+
+  if((sayac/2)==3) {uclu_kombinasyon_sayisi=1;}
+  else{
+ for(int i =1; i <= (sayac/2) ; i++){
+  fact_nokta_sayisi*=i;
+ }
+ for(int j =1; j <= ((sayac/2)-3) ; j++){
+  n_eksi_3_fact*=j;
+
+ }
+uclu_kombinasyon_sayisi = (fact_nokta_sayisi / (6 * n_eksi_3_fact));
+ }
+
+
+ 
+}
+
+
+
+
+int main(){
+	
+
+printf("Minimum Cevreleyen Cember & B-spline Programina Hosgeldimiz.. \n");
+printf("\n1.adim olarak noktalarin bulundugu dosya acilacaktir. ===>");
+
+int nokta_adedi = nokta_okuma()/2 ;
+printf("    \nolmak uzere toplamda %d nokta okunmustur.\n",nokta_adedi);
+
+
+kordinat_sistemi_noktalar();
+
+int noktax[30];
+int noktay[30];
+
+for(int i=0; i<nokta_adedi;i++)
+{
+	noktax[i]=nokta[i].x;
+	noktay[i]=nokta[i].y;
+}
+ikili_en_buyuk_cap(noktax,noktay);
+
+
+
+if(cember_bulundu==0){
+
+printf("\n ikili kombinasyonlarda en buyuk capa sahip cember kapsayici degildir.\n");
+printf(" 3 nokta analizine yonlendiriliyorsunuz....");
+uclu_kombinasyon_sayisi_bulma();
+uclu_kombinasyon_olusturma();
+
+
+float en_kucuk_r = 1600;  //buyuk bir deger girdik ki daha kucuk r icin bir baslangic degerimiz olsun. daha kucuk aradigimiz icin buyuk bir degeri kullanmaliydik
+float tempX,tempY;
+
+for(int i =0; i< stok_no ; i++){  // son stogu atınca sayac 1 fazlasını gosterıyor stok son ındeksının
+	
+	if(uclu_kapsayan_stok[i][0] <= en_kucuk_r)  { 
+	
+		en_kucuk_r = uclu_kapsayan_stok[i][0];
+            tempX= uclu_kapsayan_stok[i][1];
+            tempY=uclu_kapsayan_stok[i][2];
+        
+ }
+	else continue;
+	
+}
+
+
+char bilgi[3]; //merkez x,y ve r icerir.
+sprintf(bilgi, "M(%.1f , %.1f) - r = %.4f",tempX,tempY,en_kucuk_r);  //degerlerimizi outtexty'de yazdırmak icin once sprintf ile diziye atariz. sonra diziyi girdigimizde sonuc ne ise ekrana o basilir
+
+
+
+printf("\n\n*******************************************\n");
+printf("\n \nMinimum Cember Bilgileri  \n Merkez Kordinatlari"
+           "  X = %.1f y = %.1f\n Yaricapi = %.4f\n",tempX,tempY,en_kucuk_r);
+printf("\n\n*******************************************\n");
+setcolor(BLUE);
+circle(tempX*15 + 400 ,(tempY * -15) +400, en_kucuk_r*15);
+
+
+setcolor(GREEN);
+settextstyle(6,0,2);  
+line(tempX*15 + 400,(tempY * -15) +400,tempX*15 + 400+en_kucuk_r*15,(tempY * -15) +400);                      //yaricap ve merkez bilgileri cember uzerinde gosteriliyor
+outtextxy(tempX*15 + 400+en_kucuk_r*15+5, (tempY * -15) +400-10, bilgi);  //465,466. satirlarda bilginin ne sonuc verecegini yazdirmistik(sprintf ile)
+
+}
+
+
+
+// ******************************************************************  b spline islemi  *************************************************************************************************
+
+
+
+	int n = sayac/2-1; //nokta adeti.
+
+	int dizix[30];
+	int diziy[30];
+
+
+for(int a=0;a<=n;a++)
+	{
+	dizix[a]=nokta[a].x;
+	diziy[a]=nokta[a].y;	
+	}
+	
+	
+	
+	int i;
+	int tutx,tuty;
+	
+    for(int temp=1; temp<=n; temp++)
+       {
+           for (i=0;i<n ;i++)
+          {
+           if (dizix[i]>dizix[i+1])
+           {
+               tutx=dizix[i];
+               tuty=diziy[i];
+               dizix[i]=dizix[i+1];
+               diziy[i]=diziy[i+1];
+               dizix[i+1]=tutx;
+               diziy[i+1]=tuty;
+           }
+          }
+       }
+
+
+
+float ortx[20];
+float orty[20];
+
+//her bir noktanin orta noktasini bul.
+for(int q=0;q<n;q++)
+{
+	ortx[q]=(dizix[q]+dizix[q+1])/2;
+	orty[q]=(diziy[q]+diziy[q+1])/2;
+	
+}
+
+
+float t;
+float xt,yt;
+int k=1;
+
+for(int i=0; i<n;i++)
+{
+
+for(t=0.0; t<=1.0; t+=0.001)
+{
+	xt = pow(1-t,3)*dizix[i] + 3*t*pow(1-t,2)*ortx[i]*1.2 + 3*t*t*(1-t)*ortx[i]*0.8 + pow(t,3)*dizix[k];   //BSPLİNE GENEL FORMULU
+	yt = pow(1-t,3)*diziy[i] + 3*t*pow(1-t,2)*orty[i]*1.2 + 3*t*t*(1-t)*orty[i]*0.8 + pow(t,3)*diziy[k];  //1.2 hassasiyet kazandirir.(kontrol noktamiz biraz daha geriye çeklmiş olur ve eğrinin pozisyounu genişletir.)
+	
+	putpixel(xt*15+400,-15*yt+400,4);
+}
+k++;
+}
+
+
+
+// ******************************************************************  b spline islemi  *************************************************************************************************
+
+
+getch();
+closegraph();
+
+return 0;
+}
+
+
+
+
+
+
