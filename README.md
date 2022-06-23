@@ -13,6 +13,10 @@ ve karsılasma alanı ile oyuncunun seçtiği kart karşılaştırılmaktadır. 
 seçilen kartlar tekrar kullanılabilmesi için iade edilmektedir. Biglisayarın kartlarını oyuncu göremez. Fakat beraberlik durumunda kalıp bilgisayara geri verilmiş bir 
 kart artık görülebilir olmaktadır.
 
+### YÖNTEM
+
+Sporcu ana sınıfından futbolcu ve basketbolcu sınırları kalıtım almıstır. Oyuncu anasınıfından kullanıcı ve bilgisayar sınıfları kalıtım almıştır.Ortak özellikler ana sınflarda tanımlanmış böylece kod sade tutulmuştur. Text sınıfı ise sporcuların özellik ve isimlerinin belirlendiği, oyun akışının gerçekleştiği main metodunu içinde barındıran sınıftır. Oyun akısı text clası içinde kontrol edilmekte ve yönetilmektedir. Oyuncu skorları private tanımlanmış olup get ve set metotları ile erişilebilir olmuştur. (encapsulation)
+
 <img width="901" alt="Screenshot_2" src="https://user-images.githubusercontent.com/43906043/175384139-28f13603-3a1c-4b65-8694-71fff914e117.png">
 
 
@@ -26,3 +30,6 @@ kart artık görülebilir olmaktadır.
 
 
 <img width="1208" alt="Screenshot_6" src="https://user-images.githubusercontent.com/43906043/175384175-7fe50222-ab09-4b1d-9d3f-9303822ca087.png">
+
+### SONUÇ:
+Program başarıyla sonlandırılmıştır. Ekran her açıldığında desteden farklı kartlar karılarak dağıtılmış olur. Bilgisayar, rastgele karılan kartlardan yine rastgele olacak şekilde seçim yapar. Kullanıcı ise önce futbolcu ardından basketbolcu seçimi yapmak “zorundadır”. Belirtildiği gibi, art arda işlem yapılamaz. Kullanıcının ve bilgisayarın rastgele “karşılaşma ” seçeneği sonucu kart puanları eşit olursa geri gönderilir. Daha sonra yeniden oynanabilir. Bütün kartlar bittikten sonra kazanana ya da beraberliğe göre ekrana yeni bir pencerede çıktı verilir. 
